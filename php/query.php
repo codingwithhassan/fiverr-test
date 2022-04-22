@@ -5,18 +5,7 @@ require_once('./connection.php');
 function query($field, $value, $exact = TRUE)
 {
     global $connection;
-    $sql = "SELECT * FROM survey_responses";
-    $statement = $connection->prepare($sql);
-    $statement->execute();
-
-    $result = $statement->get_result();
-
-    $data = [];
-    while ($record = $result->fetch_assoc()) {
-        $data[] = $record;
-    }
-
-    print_r($data);
+    
 }
 
 function report()
