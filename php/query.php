@@ -1,13 +1,27 @@
 <?php
 
+require_once('./connection.php');
+
 function query($field, $value, $exact = TRUE)
 {
-    // TODO
+    global $connection;
+    $sql = "SELECT * FROM survey_responses";
+    $statement = $connection->prepare($sql);
+    $statement->execute();
+
+    $result = $statement->get_result();
+
+    $data = [];
+    while ($record = $result->fetch_assoc()) {
+        $data[] = $record;
+    }
+
+    print_r($data);
 }
 
 function report()
 {
-    // TODO
+    print("Report Done!");
 }
 
 query('id', '5be5884a7ab109472363c6cd');
@@ -22,3 +36,5 @@ query('email', 'ryansand@xandem.com');
 query('email', 'edwinachang', FALSE);
 
 report();
+
+$connection->close();
