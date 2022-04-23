@@ -26,46 +26,56 @@ function obfuscate($data)
     return $result;
 }
 
+function request()
+{
+    $api_url = "https://tst-api.feeditback.com/exam.users";
+
+    $user_name = 'dev_test_user';
+    $password = 'V8(Zp7K9Ab94uRgmmx2gyuT.';
+
+    $headers = [
+        'Content-Type: application/json',
+        'Authorization: Basic ' . base64_encode("{$user_name}:{$password}"),
+    ];
+
+    //Initiate cURL request
+    $curlHandle = curl_init();
+
+    curl_setopt($curlHandle, CURLOPT_URL, $api_url);
+    curl_setopt($curlHandle, CURLOPT_SSL_VERIFYHOST, 0);
+    curl_setopt($curlHandle, CURLOPT_SSL_VERIFYPEER, 0);
+	curl_setopt($curlHandle, CURLOPT_TIMEOUT, 30);
+    curl_setopt($curlHandle, CURLOPT_HTTPHEADER, $headers);
+    curl_setopt($curlHandle, CURLOPT_IPRESOLVE, CURL_IPRESOLVE_V4);
+
+    // Set the RETURNTRANSFER as true so that output will come as a string
+    curl_setopt($curlHandle, CURLOPT_RETURNTRANSFER, 1);
+
+    //Execute the cURL request.
+    $response = curl_exec($curlHandle);
+    $curlInfo = curl_getinfo($curlHandle);
+	
+	if($curlInfo['http_code'] != '200'){
+		die("Something Went Wrong! Status Code: ". $curlInfo['http_code']);
+	}
+
+    //Check if any errors occured.
+    if (curl_errno($curlHandle)) {
+        die(curl_error($curlHandle));
+    }
+
+    return $response;
+}
+
 function fetch_data()
 {
     try {
 
-        $host = "https://tst-api.feeditback.com/exam.users";
-
-        $user_name = 'dev_test_user';
-        $password = 'V8(Zp7K9Ab94uRgmmx2gyuT.';
-
         $outfile = 'users.json';
 
-        //Initiate cURL request
-        $curlHandle = curl_init($host);
+        $data = request();
 
-		curl_setopt($curlHandle, CURLOPT_SSL_VERIFYHOST, 0);
-		curl_setopt($curlHandle, CURLOPT_SSL_VERIFYPEER, 0);
-
-        // Set the header by creating the basic authentication
-        $headers = [
-            'Content-Type: application/json',
-            'Authorization: Basic ' . base64_encode("$user_name:$password"),
-		];
-        //Set the headers that we want our cURL client to use.
-
-        curl_setopt($curlHandle, CURLOPT_HTTPHEADER, $headers);
-        curl_setopt($curlHandle, CURLOPT_IPRESOLVE, CURL_IPRESOLVE_V4);
-        // Set the RETURNTRANSFER as true so that output will come as a string
-        curl_setopt($curlHandle, CURLOPT_RETURNTRANSFER, 1);
-
-        //Execute the cURL request.
-        $response = curl_exec($curlHandle);
-        $curlInfo = curl_getinfo($curlHandle);
-
-
-        //Check if any errors occured.
-        if (curl_errno($curlHandle)) {
-            throw new Exception(curl_error($curlHandle));
-        }
-
-        $list = json_decode($response, true);
+        $list = json_decode($data, true);
 
         foreach ($list as $value) {
             unset($value['latitude']);
