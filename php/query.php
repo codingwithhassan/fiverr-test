@@ -72,7 +72,7 @@ function report()
     echo "JSON Data saved successfully to file.";
 }
 
-/*
+
 query('id', '5be5884a7ab109472363c6cd');
 query('id', '5be5884a331b2c695', false);
 query('id', '5be5884a331b24639s3cc695');
@@ -83,5 +83,5 @@ query('about', 'ace', false);
 query('email', 'McConnellbranch@zytrek.com');
 query('email', 'ryansand@xandem.com');
 query('email', 'edwinachang', false);
-*/
+
 report();
