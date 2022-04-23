@@ -1,24 +1,25 @@
 <?php
 
-function query($field, $value, $exact = TRUE)
+function query($field, $value, $exact = true)
 {
     $file = file_get_contents('./users.json');
 
-    $list = json_decode($file, TRUE) or die("Invalid JSON Format!");
+    $list = json_decode($file, true) or die("Invalid JSON Format!");
 
-    if($field == 'email')
+    if ($field == 'email') {
         $value = hash('sha256', $value);
+    }
 
     $count = 0;
 
-    foreach($list as $item){
-        if(isset($item[$field])){
-            if($exact ? $item[$field] == $value : strpos($item[$field],$value)){
+    foreach ($list as $item) {
+        if (isset($item[$field])) {
+            if ($exact ? $item[$field] == $value : strpos($item[$field], $value)) {
                 echo 'Name:   ' . $item['first_name'] . ' ' . $item['last_name'];
                 $count++;
                 echo "\n";
             }
-        }else{
+        } else {
             die("\nError! Field Not found!");
         }
     }
@@ -27,65 +28,60 @@ function query($field, $value, $exact = TRUE)
     echo "________________________\n";
 }
 
-function date_compare($a, $b)
-{
-    $t1 = strtotime($a['datetime']);
-    $t2 = strtotime($b['datetime']);
-    return $t1 - $t2;
-} 
-
 function report()
 {
-    $file = file_get_contents('users.json');
-    $list = json_decode($file, TRUE);
+    $file = file_get_contents('./users.json');
 
-    // Creating an outfile variable to export json data later
+    $list = json_decode($file, true) or die("Invalid JSON Format!");
 
-    $out_file= 'users-report.json';
+    $data = [];
 
-    // Creating the requirements in the output
+    usort($list, function ($a, $b) {
+        $ad = new DateTime($a['created']);
+        $bd = new DateTime($b['created']);
 
-    foreach($list as $value){
-        echo usort($value, 'date_compare');
+        if ($ad == $bd) {
+            return 0;
+        }
+
+        return $ad < $bd ? -1 : 1;
+    });
+
+    $sum = 0;
+    $count = 0;
+
+    foreach ($list as $item) {
+        $value['name'] = $item['first_name'] . ' ' . $item['last_name'];
+        $value['favorite_colour'] = $item['favorite_colour'];
+        $value['about'] = substr($item['about'],0,20) . " ....";
+        $data['users'][] = $value;
+
+        $sum += $item['age'];
+        $count++;
     }
 
-    // Exporting a users.json file as required
+    $data['average_age'] = round($sum / $count,2);
 
-    if(file_exists($out_file)){
-        echo '\n<br><center>';
-        echo 'The file ' . $out_file . ' already exists, data will now append the file<br/>';
-      }else{
-        if($list) { 
-            if(file_put_contents($out_file, json_encode($list), FILE_APPEND)) {
-              echo "Success ! Saved JSON !";
-            }
-            else {
-              echo "Error ! Unable to save JSON!";
-            }
-        }
-      }
+    $json = json_encode($data);
 
-    print("Report Done!");
+    // Exporting a users-report.json as report
+    $file = fopen("./users-report.json", "w") or die("Error! File Not Opened!");
+    fwrite($file, $json);
+    fclose($file);
+
+    echo "JSON Data saved successfully to file.";
 }
 
+/*
 query('id', '5be5884a7ab109472363c6cd');
-echo "\n";
-query('id', '5be5884a331b2c695', FALSE);
-echo "\n";
+query('id', '5be5884a331b2c695', false);
 query('id', '5be5884a331b24639s3cc695');
-echo "\n";
 query('age', '22');
-echo "\n";
 query('age', '20');
-echo "\n";
-query('about', 'exa', FALSE);
-echo "\n";
-query('about', 'ace', FALSE);
-echo "\n";
+query('about', 'exa', false);
+query('about', 'ace', false);
 query('email', 'McConnellbranch@zytrek.com');
-echo "\n";
 query('email', 'ryansand@xandem.com');
-echo "\n";
-query('email', 'edwinachang', FALSE);
-
-// report();
+query('email', 'edwinachang', false);
+*/
+report();

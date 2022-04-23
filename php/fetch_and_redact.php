@@ -88,6 +88,8 @@ function fetch_data()
         fwrite($file,$json);
         fclose($file);
 
+        echo "JSON Data saved successfully to file.";
+
     } catch (Exception $e) {
         die('Message: ' . $e->getMessage());
     }
