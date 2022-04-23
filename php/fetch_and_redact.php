@@ -40,11 +40,14 @@ function fetch_data()
         //Initiate cURL request
         $curlHandle = curl_init($host);
 
+		curl_setopt($curlHandle, CURLOPT_SSL_VERIFYHOST, 0);
+		curl_setopt($curlHandle, CURLOPT_SSL_VERIFYPEER, 0);
+
         // Set the header by creating the basic authentication
-        $headers = array(
+        $headers = [
             'Content-Type: application/json',
             'Authorization: Basic ' . base64_encode("$user_name:$password"),
-        );
+		];
         //Set the headers that we want our cURL client to use.
 
         curl_setopt($curlHandle, CURLOPT_HTTPHEADER, $headers);
