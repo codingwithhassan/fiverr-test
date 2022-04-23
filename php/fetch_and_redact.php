@@ -1,116 +1,154 @@
 <?php
 
-function hash_value($value)
-{
-    return hash('sha256', $value);
+// Default provided function to encrypt the email address
+
+function hash_value($value){
+
+  return hash('sha256', $value);
+
 }
 
-function obfuscate($data)
-{
-    $clear = strpos($data, ' ');
-    $output = substr($data, 0, strpos($data, ' '));
-    // for non-emails addresses: keep last two characters clear
-    if ($clear === false) {
-        $clear = max(2, strlen($data) - 2);
-    }
+// Method to hide the all the characters of words in address but first two
 
-    // start hiding from 3rd character onwards, or earlier in some exceptional cases:
-    $hide = max(0, min($clear - 1, 2));
-    $result = "";
-    for ($i = 0; $i < strlen($data); $i++) {
-        $result .= substr($data, $i, $hide) .
-        str_repeat("*", $clear - $hide) .
-        substr($data, $clear);
-    }
+function hide_address($address) {
 
-    return $result;
+  // Initializing the new address variable
+
+  $new_address = "";
+  
+  // Dividing the address to sub strings by spaces
+
+  $address_part1 = explode(" ", $address);
+  // Separating the first two characters of the word
+  $address_part2 = substr($address_part1[0],2);
+  
+  // Combining the both above parts
+  $new_address = substr($address_part1[0],0,2);
+  // Replacing all the characters with *
+  $new_address .= str_repeat("*", strlen($address_part2))." ";
+  
+  // Joining replaced and first two strings and returning it
+
+  return $new_address;
 }
 
-function request()
-{
-    $api_url = "https://tst-api.feeditback.com/exam.users";
+// Method to fetch data from the give url
+
+function fetch_data(){
+
+  try {
+  
+    // Given API Link
+
+    $host="https://tst-api.feeditback.com/exam.users";
+
+    // Username & Password
 
     $user_name = 'dev_test_user';
     $password = 'V8(Zp7K9Ab94uRgmmx2gyuT.';
 
-    $headers = [
-        'Content-Type: application/json',
-        'Authorization: Basic ' . base64_encode("{$user_name}:{$password}"),
-    ];
+    // Creating an outfile variable to export json data later
 
-    //Initiate cURL request
-    $curlHandle = curl_init();
+    $out_file= 'users.json';
 
-    curl_setopt($curlHandle, CURLOPT_URL, $api_url);
-    curl_setopt($curlHandle, CURLOPT_SSL_VERIFYHOST, 0);
-    curl_setopt($curlHandle, CURLOPT_SSL_VERIFYPEER, 0);
-	curl_setopt($curlHandle, CURLOPT_TIMEOUT, 30);
-    curl_setopt($curlHandle, CURLOPT_HTTPHEADER, $headers);
-    curl_setopt($curlHandle, CURLOPT_IPRESOLVE, CURL_IPRESOLVE_V4);
+    //Initiating cURL request
 
+    $ch = curl_init($host);
+
+    // Set the header by creating the basic authentication
+
+    $headers = array(
+    'Content-Type: application/json',
+    'Authorization: Basic '. base64_encode("$user_name:$password")
+    );
+
+    //Set the headers that we want our cURL client to use.
+
+    curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+    curl_setopt($ch, CURLOPT_IPRESOLVE, CURL_IPRESOLVE_V4);
+    
     // Set the RETURNTRANSFER as true so that output will come as a string
-    curl_setopt($curlHandle, CURLOPT_RETURNTRANSFER, 1);
-
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+    
     //Execute the cURL request.
-    $response = curl_exec($curlHandle);
-    $curlInfo = curl_getinfo($curlHandle);
-	
-	if($curlInfo['http_code'] != '200'){
-		die("Something Went Wrong! Status Code: ". $curlInfo['http_code']);
-	}
-
+    
+    echo $response = curl_exec($ch);
+    var_export($host, true);
+    
     //Check if any errors occured.
-    if (curl_errno($curlHandle)) {
-        die(curl_error($curlHandle));
+    
+    if(curl_errno($ch)){
+    
+      // throw the an Exception.
+      throw new Exception(curl_error($ch));
+    
     }
 
-    return $response;
-}
+    // Getting the json data from the URL into an array
 
-function fetch_data()
-{
-    try {
+    $list = json_decode($response, TRUE);
 
-        $outfile = 'users.json';
+    // Performing operations on that array
 
-        $data = request();
+    foreach ($list as $value) {
 
-        $list = json_decode($data, true);
+      // Removing the latitude and longitude fields
 
-        foreach ($list as $value) {
-            unset($value['latitude']);
-            unset($value['longitude']);
-            $value['hash_email'] = hash_value($value['email']);
+      unset($list['latitude']);
+      unset($list['longitude']);
 
-            $broken = explode(" ", $value['address']);
-            foreach ($broken as $broken) {
-                $value['address'] .= str_replace($broken, str_repeat('*', strlen($broken)), str_repeat('*', strlen($broken)));
-                $value['address'] = obfuscate($broken);
-            }
-            // $value['address'] = obfuscate($address);
+      // Separating the address sentence by spaces
 
-            print_r($value['address']);
+      $broken = explode(" ", $value['address']);
 
-        }
+      // Adding a new obfuscated field to store obfuscated adress later
 
-        // if(file_exists($outfile)){
-        //   echo 'The file ' . $filename . ' already exists, data will now append the file<br/>';
-        // }else{
-        //   if($response) {
-        //       if(file_put_contents($outfile, $response, FILE_APPEND)) {
-        //         echo "Saved JSON fetched from “{$host}” as “{$outfile}”.";
-        //       }
-        //       else {
-        //         echo "Unable to save JSON to “{$outfile}”.";
-        //       }
-        //   }
-        // }
+      $value = array('address_obfuscated' => '', 'email_hash' => '');
+
+      // Encrypting the email field
+
+      $value['email_hash'] = hash_value($value['email']);
+
+      // Obfuscating the each word in the sentence
+
+      foreach($broken as $value2){        
+
+        // Using method to obfuscate
+
+        $broken = hide_address($value2);
+
+        // Concating the multiple obfuscated values
+
+        $value['address_obfuscated'] .= implode(" ", (array)$broken);
+      }
+
+      $list2 = $list + $value;
+
+    }    
+
+    // Exporting a users.json file as required
+
+    if(file_exists($out_file)){
+      echo '<br><br><br><center>';
+      echo 'The file ' . $out_file . ' already exists, data will now append the file<br/>';
+    }else{
+      if($list2) { 
+          if(file_put_contents($out_file, json_encode($list2), FILE_APPEND)) {
+            echo "Success ! Saved JSON !";
+          }
+          else {
+            echo "Error ! Unable to save JSON!";
+          }
+      }
     }
+    echo "</pre>";
+  }
 
-    //catch exception
-     catch (Exception $e) {
-        error_log('Message: ' . $e->getMessage());
-    }
+  //catch exception
+  catch(Exception $e) {
+    echo 'Message: ' .$e->getMessage();
+  }
 }
 
 fetch_data();
+?>
