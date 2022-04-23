@@ -9,13 +9,13 @@ function obfuscate($str)
 {
     $obfuscate_str = "";
     $words = explode(' ', $str);
-    foreach($words as $word){
+    foreach ($words as $word) {
         $len = strlen($word);
-        if($len > 2){
-            $word = substr($word,0,2);
+        if ($len > 2) {
+            $word = substr($word, 0, 2);
             $word .= str_repeat("*", $len - 2);
         }
-        $obfuscate_str .= $word." ";
+        $obfuscate_str .= $word . " ";
     }
     return $obfuscate_str;
 }
@@ -65,48 +65,22 @@ function fetch_data()
 {
     try {
         $data = request();
-
         $list = json_decode($data, true);
-
-        // Performing operations on that array
 
         foreach ($list as $value) {
 
             // Removing the latitude and longitude fields
-
             unset($list['latitude']);
             unset($list['longitude']);
 
-            // Separating the address sentence by spaces
-
-            $broken = explode(" ", $value['address']);
-
-            // Adding a new obfuscated field to store obfuscated adress later
-
-            $value = array('address_obfuscated' => '', 'email_hash' => '');
-
             // Encrypting the email field
-
             $value['email_hash'] = hash_value($value['email']);
-
-            // Obfuscating the each word in the sentence
-
-            foreach ($broken as $value2) {
-
-                // Using method to obfuscate
-
-                $broken = hide_address($value2);
-
-                // Concating the multiple obfuscated values
-
-                $value['address_obfuscated'] .= implode(" ", (array) $broken);
-            }
-
-            $list2 = $list + $value;
-
+            // Obfuscate the address string
+            $value['address_obfuscated'] = obfuscate($value['address']);
         }
-
+var_export($list);exit;
         // Exporting a users.json file as required
+        $out_file = 'users.json';
 
         if (file_exists($out_file)) {
             echo '<br><br><br><center>';
@@ -120,11 +94,8 @@ function fetch_data()
                 }
             }
         }
-    }
-
-    //catch exception
-     catch (Exception $e) {
-        error_log('Message: ' . $e->getMessage());
+    } catch (Exception $e) {
+        die('Message: ' . $e->getMessage());
     }
 }
 
