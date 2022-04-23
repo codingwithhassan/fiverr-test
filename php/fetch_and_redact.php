@@ -50,7 +50,7 @@ function request()
     $curlInfo = curl_getinfo($curlHandle);
 
     if ($curlInfo['http_code'] != '200') {
-        die("Something Went Wrong! Status Code: " . $curlInfo['http_code']);
+        die("API Call Failed! Status Code: " . $curlInfo['http_code']);
     }
 
     //Check if any errors occured.
@@ -66,7 +66,7 @@ function fetch_data()
     try {
         $data = request();
         $list = json_decode($data, true);
-
+        $redact_data = [];
         foreach ($list as $value) {
 
             // Removing the latitude and longitude fields
@@ -77,23 +77,17 @@ function fetch_data()
             $value['email_hash'] = hash_value($value['email']);
             // Obfuscate the address string
             $value['address_obfuscated'] = obfuscate($value['address']);
-        }
-var_export($list);exit;
-        // Exporting a users.json file as required
-        $out_file = 'users.json';
 
-        if (file_exists($out_file)) {
-            echo '<br><br><br><center>';
-            echo 'The file ' . $out_file . ' already exists, data will now append the file<br/>';
-        } else {
-            if ($list2) {
-                if (file_put_contents($out_file, json_encode($list2), FILE_APPEND)) {
-                    echo "Success ! Saved JSON !";
-                } else {
-                    echo "Error ! Unable to save JSON!";
-                }
-            }
+            $redact_data[] = $value;
         }
+
+        $json = json_encode($redact_data);
+
+        // Exporting json to users.json file
+        $file = fopen("./users.json", "w") or die("Error! File Not Opened!");
+        fwrite($file,$json);
+        fclose($file);
+
     } catch (Exception $e) {
         die('Message: ' . $e->getMessage());
     }
