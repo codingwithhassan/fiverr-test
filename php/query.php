@@ -1,57 +1,30 @@
 <?php
 
-// require_once('./connection.php');
-
-
 function query($field, $value, $exact = TRUE)
-{    
-    $file = file_get_contents('users.json');
-    $items_list = json_decode($file, TRUE);
-    
-    // global $connection;
-    // $sql = "SELECT * FROM survey_responses";
-    // $statement = $connection->prepare($sql);
-    // $statement->execute();
+{
+    $file = file_get_contents('./users.json');
 
-    // $result = $statement->get_result();
+    $list = json_decode($file, TRUE) or die("Invalid JSON Format!");
 
-    // $data = [];
-    // while ($record = $result->fetch_assoc()) {
-    //     $data[] = $record;
-    // }
+    if($field == 'email')
+        $value = hash('sha256', $value);
 
-    // print_r($data);    
+    $count = 0;
 
-    if($exact){        
-        foreach($items_list as $value2){            
-            if($value2[$field]){                        
-                if(in_array($value, $value2, $exact)){                
-                    echo 'First Name:   ' . $value2['first_name'];
-                    echo '  ';
-                    echo 'Last Name:    ' . $value2['last_name'];
-                    break;
-                }else{
-                    echo '<br>';
-                    echo 'Error! Not found. Fields dont match.';
-                    break;
-                }
-            }else{
-                echo "Field dont match";
-            }        
-        }
-    }else{
-        foreach($items_list as $value2){
-            if(strpos($value2[$field],$value)){
-                echo 'First Name:   ' . $value2['first_name'];
-                echo '  ';
-                echo 'Last Name:    ' . $value2['last_name'];
-                break;
-            }else{
-                echo "Error! Not found. Fields dont match.";
-                break;
+    foreach($list as $item){
+        if(isset($item[$field])){
+            if($exact ? $item[$field] == $value : strpos($item[$field],$value)){
+                echo 'Name:   ' . $item['first_name'] . ' ' . $item['last_name'];
+                $count++;
+                echo "\n";
             }
+        }else{
+            die("\nError! Field Not found!");
         }
-    }    
+    }
+
+    echo $count . " Records Found.\n";
+    echo "________________________\n";
 }
 
 function date_compare($a, $b)
@@ -64,7 +37,7 @@ function date_compare($a, $b)
 function report()
 {
     $file = file_get_contents('users.json');
-    $items_list = json_decode($file, TRUE);
+    $list = json_decode($file, TRUE);
 
     // Creating an outfile variable to export json data later
 
@@ -72,14 +45,14 @@ function report()
 
     // Creating the requirements in the output
 
-    foreach($items_list as $value){
+    foreach($list as $value){
         echo usort($value, 'date_compare');
     }
 
     // Exporting a users.json file as required
 
     if(file_exists($out_file)){
-        echo '<br><br><br><center>';
+        echo '\n<br><center>';
         echo 'The file ' . $out_file . ' already exists, data will now append the file<br/>';
       }else{
         if($list) { 
@@ -96,25 +69,23 @@ function report()
 }
 
 query('id', '5be5884a7ab109472363c6cd');
-echo "<br><br>";
+echo "\n";
 query('id', '5be5884a331b2c695', FALSE);
-echo "<br><br>";
+echo "\n";
 query('id', '5be5884a331b24639s3cc695');
-echo "<br><br>";
+echo "\n";
 query('age', '22');
-echo "<br><br>";
+echo "\n";
 query('age', '20');
-echo "<br><br>";
+echo "\n";
 query('about', 'exa', FALSE);
-echo "<br><br>";
+echo "\n";
 query('about', 'ace', FALSE);
-echo "<br><br>";
+echo "\n";
 query('email', 'McConnellbranch@zytrek.com');
-echo "<br><br>";
+echo "\n";
 query('email', 'ryansand@xandem.com');
-echo "<br><br>";
+echo "\n";
 query('email', 'edwinachang', FALSE);
 
-report();
-
-// $connection->close();
+// report();
