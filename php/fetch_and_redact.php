@@ -74,9 +74,9 @@ function fetch_data()
             unset($value['longitude']);
 
             // Encrypting the email field
-            $value['email_hash'] = hash_value($value['email']);
+            $value['email'] = hash_value($value['email']);
             // Obfuscate the address string
-            $value['address_obfuscated'] = obfuscate($value['address']);
+            $value['address'] = obfuscate($value['address']);
 
             $redact_data[] = $value;
         }
