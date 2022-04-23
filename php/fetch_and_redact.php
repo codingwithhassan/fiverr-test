@@ -70,8 +70,8 @@ function fetch_data()
         foreach ($list as $value) {
 
             // Removing the latitude and longitude fields
-            unset($list['latitude']);
-            unset($list['longitude']);
+            unset($value['latitude']);
+            unset($value['longitude']);
 
             // Encrypting the email field
             $value['email_hash'] = hash_value($value['email']);
